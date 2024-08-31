@@ -1,0 +1,11 @@
+[project]
+name = "worldtimezone"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "hikari-lightbulb>=2.3.5.post0",
+    "hikari>=2.0.0",
+    "pytz>=2024.1",
+]
