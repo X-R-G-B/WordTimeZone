@@ -54,7 +54,7 @@ async def on_starting(_: hikari.StartingEvent) -> None:
     bot.d.data = Data()
     bot.d.sched = AsyncIOScheduler()
     bot.d.sched.start()
-    bot.d.sched.add_job(edit_world_clock, CronTrigger(minute="*/1"))
+    bot.d.sched.add_job(edit_world_clock, CronTrigger(minute="*/5"))
 
 
 @bot.command
