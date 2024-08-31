@@ -13,9 +13,6 @@ import pytz
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 
-CHANNEL_WORLD_CLOCK = 1279480935510966436
-MESSAGE_EDIT_WORLD_CLOCK = 1279496427621322806
-GUILD_WORLD_CLOCK = 1279015859502841927
 INTENTS = Intents.GUILD_MEMBERS | Intents.GUILDS
 
 bot = lightbulb.BotApp(
@@ -26,23 +23,30 @@ bot = lightbulb.BotApp(
 
 
 async def edit_world_clock() -> None:
-    embed = hikari.Embed(
-        title="WorldTimeZone Clock",
-        description="",
-    )
 
-    def add_field(u, tz):
-        user_ = bot.cache.get_member(GUILD_WORLD_CLOCK, int(u))
+    def add_field(guild_id, u, tz):
+        user_ = bot.cache.get_member(guild_id, int(u))
         now = datetime.datetime.now()
         new_tz = pytz.timezone(tz)
         new_now = now.astimezone(new_tz)
-        embed.add_field(f"{user_.display_name}", f"{new_now}", inline=True)
+        embed.add_field(f"{user_.display_name}", f"{new_now}", inline=False)
 
-    for u in bot.d.data.get_members_list(GUILD_WORLD_CLOCK):
-        member = bot.d.data.get_member(GUILD_WORLD_CLOCK, u)
-        if "tz" in member:
-            add_field(u, member["tz"])
-    await bot.rest.edit_message(CHANNEL_WORLD_CLOCK, MESSAGE_EDIT_WORLD_CLOCK, embed)
+    for guild_id in bot.d.data.get_guilds_list():
+        guild_world_clock = bot.d.data.get_world_clock(guild_id)
+        channel_world_clock = guild_world_clock["channel_id"]
+        message_world_clock = guild_world_clock["message_id"]
+        embed = hikari.Embed(
+            title="WorldTimeZone Clock",
+            description="",
+        )
+
+        for u in bot.d.data.get_members_list(guild_id):
+            member = bot.d.data.get_member(guild_id, u)
+            if "tz" in member:
+                add_field(guild_id, u, member["tz"])
+        await bot.rest.edit_message(
+            channel_world_clock, message_world_clock, None, embed=embed
+        )
 
 
 @bot.listen(hikari.StartingEvent)
@@ -97,7 +101,7 @@ async def listIt(
         now = datetime.datetime.now()
         new_tz = pytz.timezone(tz)
         new_now = now.astimezone(new_tz)
-        embed.add_field(f"{user_.display_name}", f"{new_now}", inline=True)
+        embed.add_field(f"{user_.display_name}", f"{new_now}", inline=False)
 
     if user is None:
         for u in bot.d.data.get_members_list(ctx.guild_id):
@@ -107,6 +111,35 @@ async def listIt(
     else:
         add_field(f"{user.id}", file[f"{user.id}"])
     await ctx.respond(embed)
+
+
+@bot.command
+@lightbulb.option(
+    "channel",
+    "where the bot will edit the same message",
+    type=hikari.OptionType.CHANNEL,
+    required=True,
+)
+@lightbulb.command(
+    "setupchannel",
+    description="edit the same message every 5 minutes",
+    pass_options=True,
+)
+@lightbulb.implements(lightbulb.SlashCommand)
+async def setupIt(
+    ctx: lightbulb.SlashContext, channel: hikari.OptionType.CHANNEL
+) -> None:
+    message = await bot.rest.create_message(
+        channel, "This message will be edited in no time... Please wait..."
+    )
+    status = bot.d.data.set_world_clock(ctx.guild_id, channel.id, message.id)
+    if status is False:
+        await message.delete()
+        ctx.respond("Sorry, an error occured.")
+        return
+    await ctx.respond(
+        "All Set! A message has been sent to the channel, it will be edited soon."
+    )
 
 
 if __name__ == "__main__":
