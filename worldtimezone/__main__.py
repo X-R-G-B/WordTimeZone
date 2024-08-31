@@ -10,7 +10,7 @@ from hikari import Intents
 import pytz
 
 
-FILE_INFO = ".data.json"
+FILE_INFO = ".data/tz.json"
 try:
     with open(FILE_INFO) as f:
         _ = json.load(f)
