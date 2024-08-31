@@ -1,7 +1,8 @@
 import os
 from typing import Optional
-import json
 import datetime
+
+from data import Data
 
 import hikari
 import lightbulb
@@ -9,15 +10,12 @@ from hikari import Intents
 
 import pytz
 
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.cron import CronTrigger
 
-FILE_INFO = ".data/tz.json"
-try:
-    with open(FILE_INFO) as f:
-        _ = json.load(f)
-except FileNotFoundError:
-    with open(FILE_INFO, mode="w") as f:
-        json.dump({}, f)
-
+CHANNEL_WORLD_CLOCK = 1279480935510966436
+MESSAGE_EDIT_WORLD_CLOCK = 1279496427621322806
+GUILD_WORLD_CLOCK = 1279015859502841927
 INTENTS = Intents.GUILD_MEMBERS | Intents.GUILDS
 
 bot = lightbulb.BotApp(
@@ -25,6 +23,34 @@ bot = lightbulb.BotApp(
     intents=INTENTS,
     banner=None,
 )
+
+
+async def edit_world_clock() -> None:
+    embed = hikari.Embed(
+        title="WorldTimeZone Clock",
+        description="",
+    )
+
+    def add_field(u, tz):
+        user_ = bot.cache.get_member(GUILD_WORLD_CLOCK, int(u))
+        now = datetime.datetime.now()
+        new_tz = pytz.timezone(tz)
+        new_now = now.astimezone(new_tz)
+        embed.add_field(f"{user_.display_name}", f"{new_now}", inline=True)
+
+    for u in bot.d.data.get_members_list(GUILD_WORLD_CLOCK):
+        member = bot.d.data.get_member(GUILD_WORLD_CLOCK, u)
+        if "tz" in member:
+            add_field(u, member["tz"])
+    await bot.rest.edit_message(CHANNEL_WORLD_CLOCK, MESSAGE_EDIT_WORLD_CLOCK, embed)
+
+
+@bot.listen(hikari.StartingEvent)
+async def on_starting(_: hikari.StartingEvent) -> None:
+    bot.d.data = Data()
+    bot.d.sched = AsyncIOScheduler()
+    bot.d.sched.start()
+    bot.d.sched.add_job(edit_world_clock, CronTrigger(minute="*/1"))
 
 
 @bot.command
@@ -39,17 +65,12 @@ async def pingIt(ctx: lightbulb.SlashContext) -> None:
 @lightbulb.command("set", description="Set your TimeZone", pass_options=True)
 @lightbulb.implements(lightbulb.SlashCommand)
 async def setIt(ctx: lightbulb.SlashContext, timezone: Optional[str] = None) -> None:
-    if timezone is None or timezone not in pytz.all_timezones:
-        print(timezone)
+    res = bot.d.data.set_member_tz(ctx.guild_id, ctx.user.id, timezone)
+    if res is False:
         await ctx.respond(
             f"Failed, please provide a working timezone ('{timezone}' is unknow)"
         )
         return
-    with open(FILE_INFO) as f:
-        file = json.load(f)
-    file[f"{ctx.user.id}"] = timezone
-    with open(FILE_INFO, mode="w") as f:
-        json.dump(file, f)
     await ctx.respond(f"Your TimeZone as been set!")
 
 
@@ -65,29 +86,26 @@ async def listIt(
     ctx: lightbulb.SlashContext, user: Optional[hikari.OptionType.USER]
 ) -> None:
     assert ctx.guild_id is not None
-    _ = await ctx.bot.request_guild_members(ctx.guild_id, query='', limit=0)
 
-    with open(FILE_INFO) as f:
-        file = json.load(f)
     embed = hikari.Embed(
         title="WorldTimeZone Clock",
         description="",
     ).set_thumbnail(ctx.user.avatar_url)
 
     def add_field(u, tz):
-        print(u)
         user_ = ctx.bot.cache.get_member(ctx.guild_id, int(u))
-        print(user_)
         now = datetime.datetime.now()
         new_tz = pytz.timezone(tz)
         new_now = now.astimezone(new_tz)
         embed.add_field(f"{user_.display_name}", f"{new_now}", inline=True)
 
     if user is None:
-        for u, tz in file.items():
-            add_field(u, tz)
+        for u in bot.d.data.get_members_list(ctx.guild_id):
+            member = bot.d.data.get_member(ctx.guild_id, u)
+            if "tz" in member:
+                add_field(u, member["tz"])
     else:
-        add_field(f"{ctx.user.id}", file[f"{ctx.user.id}"])
+        add_field(f"{user.id}", file[f"{user.id}"])
     await ctx.respond(embed)
 
 

@@ -5,6 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "apscheduler>=3.10.4",
     "hikari-lightbulb>=2.3.5.post0",
     "hikari>=2.0.0",
     "pytz>=2024.1",
