@@ -81,7 +81,7 @@ jobs:
           push: true
 
       - name: Download image
-        run: docker pull ghcr.io/x-r-g-b/worldtimezone:main
+        run: docker pull "${{ env.REGISTRY_IMAGE}}:main"
 
       - name: Show images
         run: docker images
@@ -95,9 +95,9 @@ jobs:
         run: chmod +x ./dockerc
 
       - name: Create executable amd64
-        run: ./dockerc --image "docker-daemon:${{ env.IMAGE }}:main" -o worldtimezone_amd64 --arch amd64
+        run: ./dockerc --image "docker-daemon:${{ env.REGISTRY_IMAGE }}:main" -o worldtimezone_amd64 --arch amd64
       - name: Create executable arm64
-        run: ./dockerc --image "docker-daemon:${{ env.IMAGE }}:main" -o worldtimezone_amd64 --arch arm64
+        run: ./dockerc --image "docker-daemon:${{ env.REGISTRY_IMAGE }}:main" -o worldtimezone_amd64 --arch arm64
 
 # upload
 
