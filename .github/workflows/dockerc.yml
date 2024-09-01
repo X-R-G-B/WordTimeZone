@@ -5,7 +5,7 @@ on:
 env:
   BRANCH: "main"
   REGISTRY: "ghcr.io"
-  REGISTRY_IMAGE: "worldtimezone"
+  REGISTRY_IMAGE: "ghcr.io/worldtimezone"
 
 jobs:
   release-create:
