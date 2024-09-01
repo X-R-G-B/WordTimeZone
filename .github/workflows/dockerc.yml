@@ -80,6 +80,9 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           push: true
 
+      - name: Show images
+        run: docker images
+
 # dockerc
 
       - name: Download dockerc
