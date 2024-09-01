@@ -80,6 +80,9 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           push: true
 
+      - name: Download image
+        run: docker pull ghcr.io/x-r-g-b/worldtimezone:main
+
       - name: Show images
         run: docker images
 
