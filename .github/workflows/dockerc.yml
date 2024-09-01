@@ -5,7 +5,8 @@ on:
 env:
   BRANCH: "main"
   REGISTRY: "ghcr.io"
-  REGISTRY_IMAGE: "ghcr.io/worldtimezone"
+  IMAGE: "${{ github.repository }}"
+  REGISTRY_IMAGE: "ghcr.io/${{ github.repository }}"
 
 jobs:
   release-create:
@@ -81,9 +82,9 @@ jobs:
         run: chmod +x ./dockerc
 
       - name: Create executable amd64
-        run: ./dockerc --image ghcr.io://worldtimezone:main -o worldtimezone_amd64 --arch amd64
+        run: ./dockerc --image ghcr.io://${{ env.IMAGE }}:main -o worldtimezone_amd64 --arch amd64
       - name: Create executable arm64
-        run: ./dockerc --image ghcr.io://worldtimezone:main -o worldtimezone_amd64 --arch arm64
+        run: ./dockerc --image ghcr.io://${{ env.IMAGE }}:main -o worldtimezone_amd64 --arch arm64
 
 # upload
 
