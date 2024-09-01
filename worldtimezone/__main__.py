@@ -31,7 +31,7 @@ async def edit_world_clock() -> None:
         embed = hikari.Embed(
             title=f"WorldTimeClock - {user_.display_name}",
             description=f"Timezone: {tz}",
-        ).set_author(name=f"{user_.display_name}", url=user_.avatar_url)
+        ).set_author(name=f"{user_.display_name}").set_thumbnail(user_.avatar_url)
         now = datetime.datetime.now()
         new_tz = pytz.timezone(tz)
         new_now = now.astimezone(new_tz)
