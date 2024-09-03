@@ -24,9 +24,8 @@ bot = lightbulb.BotApp(
 
 async def edit_world_clock() -> None:
 
-    embeds = []
 
-    def add_field(guild_id, u, tz):
+    def create_embed(guild_id, u, tz):
         user_ = bot.cache.get_member(guild_id, int(u))
         embed = hikari.Embed(
             title=f"WorldTimeClock - {user_.display_name}",
@@ -36,9 +35,10 @@ async def edit_world_clock() -> None:
         new_tz = pytz.timezone(tz)
         new_now = now.astimezone(new_tz)
         embed.add_field("Time", f"{new_now}", inline=False)
-        embeds.append(embed)
+        return embed
 
     for guild_id in bot.d.data.get_guilds_list():
+        embeds = []
         guild_world_clock = bot.d.data.get_world_clock(guild_id)
         channel_world_clock = guild_world_clock["channel_id"]
         message_world_clock = guild_world_clock["message_id"]
@@ -46,7 +46,7 @@ async def edit_world_clock() -> None:
         for u in bot.d.data.get_members_list(guild_id):
             member = bot.d.data.get_member(guild_id, u)
             if "tz" in member:
-                add_field(guild_id, u, member["tz"])
+                embeds.append(create_embed(guild_id, u, member["tz"]))
         await bot.rest.edit_message(
             channel_world_clock, message_world_clock, None, embeds=embeds
         )
