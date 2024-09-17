@@ -24,13 +24,16 @@ bot = lightbulb.BotApp(
 
 async def edit_world_clock() -> None:
 
-
     def create_embed(guild_id, u, tz):
         user_ = bot.cache.get_member(guild_id, int(u))
-        embed = hikari.Embed(
-            title=f"WorldTimeClock - {user_.display_name}",
-            description=f"Timezone: {tz}",
-        ).set_author(name=f"{user_.display_name}").set_thumbnail(user_.avatar_url)
+        embed = (
+            hikari.Embed(
+                title=f"WorldTimeClock - {user_.display_name}",
+                description=f"Timezone: {tz}",
+            )
+            .set_author(name=f"{user_.display_name}")
+            .set_thumbnail(user_.avatar_url)
+        )
         now = datetime.datetime.now()
         new_tz = pytz.timezone(tz)
         new_now = now.astimezone(new_tz)
@@ -61,6 +64,7 @@ async def on_starting(_: hikari.StartingEvent) -> None:
 
 
 @bot.command
+@lightbulb.add_cooldown(5, 1, lightbulb.GuildBucket)
 @lightbulb.command("ping", description="The bot's ping.")
 @lightbulb.implements(lightbulb.SlashCommand)
 async def pingIt(ctx: lightbulb.SlashContext) -> None:
@@ -68,6 +72,7 @@ async def pingIt(ctx: lightbulb.SlashContext) -> None:
 
 
 @bot.command
+@lightbulb.add_cooldown(5, 1, lightbulb.UserBucket)
 @lightbulb.option("timezone", "Your TimeZone", type=str, required=False)
 @lightbulb.command("set", description="Set your TimeZone", pass_options=True)
 @lightbulb.implements(lightbulb.SlashCommand)
@@ -82,6 +87,7 @@ async def setIt(ctx: lightbulb.SlashContext, timezone: Optional[str] = None) -> 
 
 
 @bot.command
+@lightbulb.add_cooldown(2, 1, lightbulb.GuildBucket)
 @lightbulb.option(
     "user", "to see only his/her time", type=hikari.OptionType.USER, required=False
 )
@@ -122,6 +128,56 @@ async def listIt(
 
 
 @bot.command
+@lightbulb.option("hour", "hour in your timezone", type=int, required=True)
+@lightbulb.option(
+    "minute", "minute in your timezone", type=int, required=False, default=0
+)
+@lightbulb.option(
+    "day",
+    "day in your timezone",
+    type=int,
+    required=False,
+    default=datetime.datetime.now().day,
+)
+@lightbulb.option(
+    "month",
+    "month in your timezone",
+    type=int,
+    required=False,
+    default=datetime.datetime.now().month,
+)
+@lightbulb.option(
+    "year",
+    "year in your timezone",
+    type=int,
+    required=False,
+    default=datetime.datetime.now().year,
+)
+@lightbulb.command(
+    "convert",
+    description="convert a specific time to others timezone",
+    pass_options=True,
+)
+@lightbulb.implements(lightbulb.SlashCommand)
+async def convertIt(
+    ctx: lightbulb.SlashContext, hour: int, minute: int, day: int, month: int, year: int
+) -> None:
+    message = ""
+    for u in bot.d.data.get_members_list(ctx.guild_id):
+        member = bot.d.data.get_member(ctx.guild_id, u)
+        if "tz" in member:
+            user_ = ctx.bot.cache.get_member(ctx.guild_id, int(u))
+            now = datetime.datetime(
+                year=year, month=month, day=day, hour=hour, minute=minute
+            )
+            new_tz = pytz.timezone(tz)
+            new_now = now.astimezone(new_tz)
+            message += f"**{user_.display_name}**: {new_now}\n"
+    await ctx.respond(message)
+
+
+@bot.command
+@lightbulb.add_cooldown(10, 1, lightbulb.GuildBucket)
 @lightbulb.option(
     "channel",
     "where the bot will edit the same message",
