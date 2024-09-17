@@ -1,3 +1,8 @@
 .env
 .ruff_cache
 assets
+Dockerfile
+.gitignore
+.git
+.github
+.dockerignore
