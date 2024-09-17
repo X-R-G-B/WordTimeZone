@@ -27,3 +27,5 @@ message there, and update it every 5 minutes with current time.
 2. Run it with `-e BOT_TOKEN=your.bot.token` env variable set to your discord bot
 
 ### If you have any issues, feel free to create an [issue](https://github.com/X-R-G-B/WorldTimeZone/issues)
+
+### If you don't want to self-host it, create an issue and I will see if I can send you the link to invit it.
