@@ -163,14 +163,19 @@ async def convertIt(
     ctx: lightbulb.SlashContext, hour: int, minute: int, day: int, month: int, year: int
 ) -> None:
     message = ""
+    user_info = bot.d.data.get_member(ctx.guild_id, ctx.user.id)
+    if "tz" not in user_info:
+        await ctx.respond("Please set your timezone first")
+        return
     for u in bot.d.data.get_members_list(ctx.guild_id):
-        member = bot.d.data.get_member(ctx.guild_id, u)
-        if "tz" in member:
+        member_info = bot.d.data.get_member(ctx.guild_id, u)
+        if "tz" in member_info:
             user_ = ctx.bot.cache.get_member(ctx.guild_id, int(u))
             now = datetime.datetime(
                 year=year, month=month, day=day, hour=hour, minute=minute
             )
-            new_tz = pytz.timezone(member["tz"])
+            now = pytz.timezone(user_info["tz"]).localize(now)
+            new_tz = pytz.timezone(member_info["tz"])
             new_now = now.astimezone(new_tz)
             message += f"**{user_.display_name}**: {new_now}\n"
     await ctx.respond(message)
