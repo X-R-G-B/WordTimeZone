@@ -4,6 +4,17 @@ Display what time is it for your friend in their timezone.
 
 ## Usage
 
+This bot use only slash command.
+
+![slash commands](./assets/images/slash_commands.png)
+
+Once you setup a channel for the world clock, WorldTimeZone Bot will send a
+message there, and update it every 5 minutes with current time.
+
+![world clock](./assets/images/world_clock.png)
+
+## Install
+
 ### Binary (linux only)
 
 1. Grab a binary for your platform in the latest release

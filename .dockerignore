@@ -1,1 +1,3 @@
 .env
+.ruff_cache
+assets
