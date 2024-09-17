@@ -170,7 +170,7 @@ async def convertIt(
             now = datetime.datetime(
                 year=year, month=month, day=day, hour=hour, minute=minute
             )
-            new_tz = pytz.timezone(tz)
+            new_tz = pytz.timezone(member["tz"])
             new_now = now.astimezone(new_tz)
             message += f"**{user_.display_name}**: {new_now}\n"
     await ctx.respond(message)
