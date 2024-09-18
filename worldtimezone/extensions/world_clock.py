@@ -14,7 +14,7 @@ plugin = lightbulb.Plugin("WorldClock")
 @plugin.command
 @lightbulb.add_cooldown(5, 1, lightbulb.UserBucket)
 @lightbulb.option(
-    "timezone", "Your TimeZone", type=str, required=False, choices=world_clock_data.COMMON_TIMEZONES
+    "timezone", "Your TimeZone", type=str, required=False, autocomplete=True
 )
 @lightbulb.command("set", description="Set your TimeZone", pass_options=True)
 @lightbulb.implements(lightbulb.SlashCommand)
@@ -26,6 +26,11 @@ async def setIt(ctx: lightbulb.SlashContext, timezone: Optional[str] = None) -> 
         )
         return
     await ctx.respond("Your TimeZone as been set!")
+
+
+@setIt.autocomplete("timezone")
+async def setIt_autocomplete_timezone(opt, inter):
+    return world_clock_data.COMMON_TIMEZONES
 
 
 @lightbulb.add_checks(lightbulb.human_only)
