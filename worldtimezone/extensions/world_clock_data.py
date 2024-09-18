@@ -5,6 +5,29 @@ import pytz
 FILE_INFO = ".data/tz_v2.json"
 
 
+COMMON_TIMEZONES = [
+    "Europe/London",
+    "Europe/Paris",
+    "Europe/Moscow",
+    "Asia/Yekaterinburg",
+    "Asia/Bangkok",
+    "Asia/Shanghai",
+    "Asia/Yakutsk",
+    "Australia/Sydney",
+    "Asia/Srednekolymsk",
+    "Pacific/Fiji",
+    "Pacific/Niue",
+    "America/Anchorage",
+    "America/Vancouver",
+    "America/Regina",
+    "America/Winnipeg",
+    "America/New_York",
+    "America/Buenos_Aires",
+    "America/Nuuk",
+    "Africa/Bamako",
+]
+
+
 class WorldClockData:
     def __init__(self):
         try:

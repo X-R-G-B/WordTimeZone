@@ -10,10 +10,11 @@ from extensions import world_clock_data
 plugin = lightbulb.Plugin("WorldClock")
 
 
+@lightbulb.add_checks(lightbulb.human_only)
 @plugin.command
 @lightbulb.add_cooldown(5, 1, lightbulb.UserBucket)
 @lightbulb.option(
-    "timezone", "Your TimeZone", type=str, required=False, choices=pytz.all_timezones
+    "timezone", "Your TimeZone", type=str, required=False, choices=world_clock_data.COMMON_TIMEZONES
 )
 @lightbulb.command("set", description="Set your TimeZone", pass_options=True)
 @lightbulb.implements(lightbulb.SlashCommand)
@@ -27,6 +28,16 @@ async def setIt(ctx: lightbulb.SlashContext, timezone: Optional[str] = None) -> 
     await ctx.respond("Your TimeZone as been set!")
 
 
+@lightbulb.add_checks(lightbulb.human_only)
+@plugin.command
+@lightbulb.add_cooldown(5, 1, lightbulb.UserBucket)
+@lightbulb.command("timezone", description="List common timezones")
+@lightbulb.implements(lightbulb.SlashCommand)
+async def timezoneIt(ctx: lightbulb.SlashContext) -> None:
+    ctx.respond(f"{world_clock_data.COMMON_TIMEZONES}\nFor all timezones: <https://github.com/stub42/pytz/blob/master/tz/zone.tab>")
+
+
+@lightbulb.add_checks(lightbulb.human_only)
 @plugin.command
 @lightbulb.add_cooldown(2, 1, lightbulb.GuildBucket)
 @lightbulb.option(
@@ -68,6 +79,7 @@ async def listIt(
     await ctx.respond(embed)
 
 
+@lightbulb.add_checks(lightbulb.human_only)
 @plugin.command
 @lightbulb.option("hour", "hour in your timezone", type=int, required=True)
 @lightbulb.option("minute", "minute", type=int, required=False, default=0)
@@ -97,7 +109,7 @@ async def listIt(
     "timezone of the time|date (default is yours)",
     type=str,
     required=False,
-    choices=pytz.all_timezones,
+    choices=world_clock_data.COMMON_TIMEZONES,
 )
 @lightbulb.command(
     "convert",
@@ -139,6 +151,7 @@ async def convertIt(
     await ctx.respond(message)
 
 
+@lightbulb.add_checks(lightbulb.human_only)
 @plugin.command
 @lightbulb.add_cooldown(10, 1, lightbulb.GuildBucket)
 @lightbulb.option(
