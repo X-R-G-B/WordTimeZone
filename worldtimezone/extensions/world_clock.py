@@ -4,7 +4,6 @@ from typing import Optional
 import hikari
 import lightbulb
 import pytz
-
 from extensions import world_clock_data
 
 plugin = lightbulb.Plugin("WorldClock")
@@ -39,7 +38,9 @@ async def setIt_autocomplete_timezone(opt, inter):
 @lightbulb.command("timezone", description="List common timezones")
 @lightbulb.implements(lightbulb.SlashCommand)
 async def timezoneIt(ctx: lightbulb.SlashContext) -> None:
-    ctx.respond(f"{world_clock_data.COMMON_TIMEZONES}\nFor all timezones: <https://github.com/stub42/pytz/blob/master/tz/zone.tab>")
+    ctx.respond(
+        f"{world_clock_data.COMMON_TIMEZONES}\nFor all timezones: <https://github.com/stub42/pytz/blob/master/tz/zone.tab>"
+    )
 
 
 @lightbulb.add_checks(lightbulb.human_only)
@@ -114,7 +115,7 @@ async def listIt(
     "timezone of the time|date (default is yours)",
     type=str,
     required=False,
-    choices=world_clock_data.COMMON_TIMEZONES,
+    autocomplete=True,
 )
 @lightbulb.command(
     "convert",
@@ -154,6 +155,11 @@ async def convertIt(
             new_now = now.astimezone(new_tz)
             message += f"**{user_.display_name}**: {new_now}\n"
     await ctx.respond(message)
+
+
+@convertIt.autocomplete("timezone")
+async def convertIt_autocomplete_timezone(opt, inter):
+    return world_clock_data.COMMON_TIMEZONES
 
 
 @lightbulb.add_checks(lightbulb.human_only)
