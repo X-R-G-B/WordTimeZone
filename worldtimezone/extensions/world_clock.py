@@ -93,7 +93,8 @@ async def listIt(
     default=datetime.datetime.now().year,
 )
 @lightbulb.option(
-    "timezone" "timezone of the time|date (default is yours)",
+    "timezone",
+    "timezone of the time|date (default is yours)",
     type=str,
     required=False,
     choices=pytz.all_timezones,
