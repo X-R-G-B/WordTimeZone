@@ -5,7 +5,7 @@ import hikari
 import lightbulb
 import pytz
 
-from worldtimezone.extensions import world_clock_data
+from extensions import world_clock_data
 
 plugin = lightbulb.Plugin("WorldClock")
 
