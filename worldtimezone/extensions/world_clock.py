@@ -5,12 +5,16 @@ import hikari
 import lightbulb
 import pytz
 
+from worldtimezone.extensions import world_clock_data
+
 plugin = lightbulb.Plugin("WorldClock")
 
 
 @plugin.command
 @lightbulb.add_cooldown(5, 1, lightbulb.UserBucket)
-@lightbulb.option("timezone", "Your TimeZone", type=str, required=False)
+@lightbulb.option(
+    "timezone", "Your TimeZone", type=str, required=False, choices=pytz.all_timezones
+)
 @lightbulb.command("set", description="Set your TimeZone", pass_options=True)
 @lightbulb.implements(lightbulb.SlashCommand)
 async def setIt(ctx: lightbulb.SlashContext, timezone: Optional[str] = None) -> None:
@@ -66,29 +70,33 @@ async def listIt(
 
 @plugin.command
 @lightbulb.option("hour", "hour in your timezone", type=int, required=True)
-@lightbulb.option(
-    "minute", "minute in your timezone", type=int, required=False, default=0
-)
+@lightbulb.option("minute", "minute", type=int, required=False, default=0)
 @lightbulb.option(
     "day",
-    "day in your timezone",
+    "day",
     type=int,
     required=False,
     default=datetime.datetime.now().day,
 )
 @lightbulb.option(
     "month",
-    "month in your timezone",
+    "month",
     type=int,
     required=False,
     default=datetime.datetime.now().month,
 )
 @lightbulb.option(
     "year",
-    "year in your timezone",
+    "year",
     type=int,
     required=False,
     default=datetime.datetime.now().year,
+)
+@lightbulb.option(
+    "timezone" "timezone of the time|date (default is yours)",
+    type=str,
+    required=False,
+    choices=pytz.all_timezones,
 )
 @lightbulb.command(
     "convert",
@@ -97,21 +105,33 @@ async def listIt(
 )
 @lightbulb.implements(lightbulb.SlashCommand)
 async def convertIt(
-    ctx: lightbulb.SlashContext, hour: int, minute: int, day: int, month: int, year: int
+    ctx: lightbulb.SlashContext,
+    hour: int,
+    minute: int,
+    day: int,
+    month: int,
+    year: int,
+    timezone: Optional[str],
 ) -> None:
+    if timezone is not None and timezone not in pytz.all_timezones:
+        await ctx.respond(
+            f"Failed, please provide a working timezone ('{timezone}' is unknow)"
+        )
+        return
     message = ""
     user_info = ctx.bot.d.data.get_member(ctx.guild_id, ctx.user.id)
     if "tz" not in user_info:
         await ctx.respond("Please set your timezone first")
         return
+    now = datetime.datetime(year=year, month=month, day=day, hour=hour, minute=minute)
+    if timezone is None:
+        now = pytz.timezone(user_info["tz"]).localize(now)
+    else:
+        now = pytz.timezone(timezone).localize(now)
     for u in ctx.bot.d.data.get_members_list(ctx.guild_id):
         member_info = ctx.bot.d.data.get_member(ctx.guild_id, u)
         if "tz" in member_info:
             user_ = ctx.bot.cache.get_member(ctx.guild_id, int(u))
-            now = datetime.datetime(
-                year=year, month=month, day=day, hour=hour, minute=minute
-            )
-            now = pytz.timezone(user_info["tz"]).localize(now)
             new_tz = pytz.timezone(member_info["tz"])
             new_now = now.astimezone(new_tz)
             message += f"**{user_.display_name}**: {new_now}\n"
@@ -149,6 +169,7 @@ async def setupIt(
 
 
 def load(bot: lightbulb.BotApp):
+    bot.d.data = world_clock_data.WorldClockData()
     bot.add_plugin(plugin)
 
 

@@ -2,7 +2,6 @@ import os
 
 import hikari
 import lightbulb
-from data import Data
 from hikari import Intents
 from lightbulb.ext import tasks
 
@@ -18,7 +17,7 @@ tasks.load(bot)
 
 @bot.listen(hikari.StartingEvent)
 async def on_starting(_: hikari.StartingEvent) -> None:
-    bot.d.data = Data()
+    print("WorldTimeZone Ready!!")
 
 
 bot.load_extensions("extensions.ping")

@@ -7,6 +7,7 @@ from lightbulb.ext import tasks
 
 plugin = lightbulb.Plugin("EditWorldClock")
 
+
 @tasks.task(m=5, auto_start=True, pass_app=True)
 async def edit_world_clock(bot: lightbulb.BotApp) -> None:
     def create_embed(guild_id, u, tz):
@@ -38,6 +39,7 @@ async def edit_world_clock(bot: lightbulb.BotApp) -> None:
         await bot.rest.edit_message(
             channel_world_clock, message_world_clock, None, embeds=embeds
         )
+
 
 def load(bot: lightbulb.BotApp):
     pass
