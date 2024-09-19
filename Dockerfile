@@ -1,4 +1,7 @@
 FROM python:3.12-slim-bookworm AS base
+RUN apt-get update -y \
+    && apt-get install -y gcc \
+    && rm -rf /var/lib/apt/lists/*
 
 FROM base AS builder
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
