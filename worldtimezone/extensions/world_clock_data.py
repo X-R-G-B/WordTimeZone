@@ -97,9 +97,6 @@ class WorldClockData:
 
     def get_guilds_list(self) -> list[DBGuild]:
         guilds = DBGuild.select()
-        print(guilds)
-        for g in guilds:
-            print("abc::", g.discord_id)
         return list(guilds)
 
     def set_guild_world_clock(self, guild: DBGuild, channel_id, message_id) -> bool:

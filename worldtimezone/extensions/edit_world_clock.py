@@ -13,7 +13,6 @@ async def edit_world_clock(bot: lightbulb.BotApp) -> None:
     await bot.wait_for(hikari.StartedEvent, timeout=None)
 
     def create_embed(guild_id, member_id, tz):
-        print("guild_id", guild_id, "member_id", member_id)
         user_ = bot.cache.get_member(guild_id, int(member_id))
         if user_ is None:
             return None
