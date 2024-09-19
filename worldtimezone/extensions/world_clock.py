@@ -18,7 +18,13 @@ plugin = lightbulb.Plugin("WorldClock")
 @lightbulb.command("set", description="Set your TimeZone", pass_options=True)
 @lightbulb.implements(lightbulb.SlashCommand)
 async def setIt(ctx: lightbulb.SlashContext, timezone: Optional[str] = None) -> None:
-    res = ctx.bot.d.data.set_member_tz(ctx.guild_id, ctx.user.id, timezone)
+    user = ctx.bot.d.data.get_member(ctx.guild_id, ctx.user.id)
+    if user is None:
+        guild = ctx.bot.d.data.get_guild(ctx.guild_id)
+        if guild is None:
+            guild = ctx.bot.d.data.create_guild(ctx.guild_id)
+        user = ctx.bot.d.data.create_member(guild, ctx.user.id)
+    res = ctx.bot.d.data.set_member_tz(user, timezone)
     if res is False:
         await ctx.respond(
             f"Failed, please provide a working timezone ('{timezone}' is unknow)"
@@ -56,32 +62,28 @@ async def timezoneIt(ctx: lightbulb.SlashContext) -> None:
 async def listIt(
     ctx: lightbulb.SlashContext, user: Optional[hikari.OptionType.USER]
 ) -> None:
-    assert ctx.guild_id is not None
-
     embed = hikari.Embed(
         title="WorldTimeZone Clock",
         description="",
     ).set_thumbnail(ctx.user.avatar_url)
 
-    def add_field(u, tz):
-        user_ = ctx.bot.cache.get_member(ctx.guild_id, int(u))
+    def add_field(member_id, tz):
+        user_ = ctx.bot.cache.get_member(ctx.guild_id, int(member_id))
         now = datetime.datetime.now()
         new_tz = pytz.timezone(tz)
         new_now = now.astimezone(new_tz)
         embed.add_field(f"{user_.display_name}", f"{new_now}", inline=False)
 
     if user is None:
-        for u in ctx.bot.d.data.get_members_list(ctx.guild_id):
-            member = ctx.bot.d.data.get_member(ctx.guild_id, u)
-            if "tz" in member:
-                add_field(u, member["tz"])
+        for member in ctx.bot.d.data.get_members_list(ctx.guild_id):
+            if member.tz != "":
+                add_field(member.discord_id, member.tz)
     else:
         member = ctx.bot.d.data.get_member(ctx.guild_id, user.id)
-        if "tz" in member:
-            add_field(f"{user.id}", member["tz"])
-        else:
+        if member is None or member.tz == "":
             ctx.respond("This user has no timezone set.")
             return
+        add_field(f"{user.id}", member.tz)
     await ctx.respond(embed)
 
 
@@ -147,12 +149,15 @@ async def convertIt(
         now = pytz.timezone(user_info.tz).localize(now)
     else:
         now = pytz.timezone(timezone).localize(now)
-    for member_info in ctx.bot.d.data.get_members_list(ctx.guild_id):
+    for member_info in ctx.bot.d.data.get_members_list(ctx.guild_id) or []:
         if member_info.tz != "":
             user_ = ctx.bot.cache.get_member(ctx.guild_id, int(member_info.discord_id))
             new_tz = pytz.timezone(member_info.tz)
             new_now = now.astimezone(new_tz)
             message += f"**{user_.display_name}**: {new_now} [{member_info.tz}]\n"
+    if len(message) == 0:
+        await ctx.respond("No timezone to convert to (use `/set` SlashCommand)")
+        return
     await ctx.respond(message)
 
 
@@ -182,7 +187,10 @@ async def setupIt(
     message = await ctx.bot.rest.create_message(
         channel, "This message will be edited in no time... Please wait..."
     )
-    status = ctx.bot.d.data.set_world_clock(ctx.guild_id, channel.id, message.id)
+    guild = ctx.bot.d.data.get_guild(ctx.guild_id)
+    if guild is None:
+        guild = ctx.bot.d.data.create_guild(ctx.guild_id)
+    status = ctx.bot.d.data.set_guild_world_clock(guild, channel.id, message.id)
     if status is False:
         await message.delete()
         ctx.respond("Sorry, an error occured.")

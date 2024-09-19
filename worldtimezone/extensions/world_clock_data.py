@@ -88,6 +88,11 @@ class WorldClockData:
 
     # Guild
 
+    def create_guild(self, guild_id) -> DBGuild:
+        guild = DBGuild(discord_id=guild_id)
+        guild.save()
+        return guild
+
     def get_guild(self, guild_id) -> Optional[DBGuild]:
         guild_id = f"{guild_id}"
         try:
@@ -108,6 +113,12 @@ class WorldClockData:
         return True
 
     # Member
+
+    def create_member(self, guild: DBGuild, user_id) -> DBMember:
+        user_id = f"{user_id}"
+        member = DBMember(discord_id=user_id, guild=guild)
+        member.save()
+        return member
 
     def get_member(self, guild_id, user_id) -> Optional[DBMember]:
         guild_id = f"{guild_id}"
