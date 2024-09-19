@@ -128,8 +128,7 @@ class WorldClockData:
                 DBMember.select()
                 .join(DBGuild)
                 .where(
-                    (DBMember.discord_id == user_id)
-                    & (DBGuild.discord_id == guild_id)
+                    (DBMember.discord_id == user_id) & (DBGuild.discord_id == guild_id)
                 )
                 .get()
             )
