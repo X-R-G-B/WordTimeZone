@@ -46,6 +46,8 @@ async def edit_world_clock(bot: lightbulb.BotApp) -> None:
             await bot.rest.edit_message(
                 channel_world_clock, message_world_clock, None, embeds=embeds
             )
+        else:
+            print(f"Failed update message: {guild.discord_id}")
 
 
 def load(bot: lightbulb.BotApp):
