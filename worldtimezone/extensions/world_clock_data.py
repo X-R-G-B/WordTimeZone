@@ -115,9 +115,10 @@ class WorldClockData:
         try:
             return (
                 DBMember.select()
+                .join(DBGuild)
                 .where(
                     (DBMember.discord_id == user_id)
-                    & (DBMember.guild.discord_id == guild_id)
+                    & (DBGuild.discord_id == guild_id)
                 )
                 .get()
             )
