@@ -15,7 +15,9 @@ async def edit_world_clock(bot: lightbulb.BotApp) -> None:
     def create_embed(guild_id, member_id, tz):
         user_ = bot.cache.get_member(guild_id, int(member_id))
         if user_ is None:
-            return None
+            user_ = bot.rest.fetch_member(guild_id, int(member_id))
+            if user_ is None:
+                return None
         embed = (
             hikari.Embed(
                 title=f"WorldTimeClock - {user_.display_name}",
