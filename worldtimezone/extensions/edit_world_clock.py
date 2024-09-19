@@ -12,10 +12,10 @@ plugin = lightbulb.Plugin("EditWorldClock")
 async def edit_world_clock(bot: lightbulb.BotApp) -> None:
     await bot.wait_for(hikari.StartedEvent, timeout=None)
 
-    def create_embed(guild_id, member_id, tz):
+    async def create_embed(guild_id, member_id, tz):
         user_ = bot.cache.get_member(guild_id, int(member_id))
         if user_ is None:
-            user_ = bot.rest.fetch_member(guild_id, int(member_id))
+            user_ = await bot.rest.fetch_member(guild_id, int(member_id))
             if user_ is None:
                 return None
         embed = (
@@ -39,7 +39,7 @@ async def edit_world_clock(bot: lightbulb.BotApp) -> None:
 
         for u in bot.d.data.get_members_list(guild.discord_id) or []:
             if u.tz != "":
-                embed = create_embed(guild.discord_id, u.discord_id, u.tz)
+                embed = await create_embed(guild.discord_id, u.discord_id, u.tz)
                 if embed is not None:
                     embeds.append(embed)
                 else:
