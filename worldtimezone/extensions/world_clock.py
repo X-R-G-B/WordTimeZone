@@ -18,13 +18,14 @@ plugin = lightbulb.Plugin("WorldClock")
 @lightbulb.command("set", description="Set your TimeZone", pass_options=True)
 @lightbulb.implements(lightbulb.SlashCommand)
 async def setIt(ctx: lightbulb.SlashContext, timezone: Optional[str] = None) -> None:
-    user = ctx.bot.d.data.get_member(ctx.guild_id, ctx.user.id)
+    wcd = ctx.bot.d.world_clock_data
+    user = wcd.get_member(ctx.guild_id, ctx.user.id)
     if user is None:
-        guild = ctx.bot.d.data.get_guild(ctx.guild_id)
+        guild = wcd.get_guild(ctx.guild_id)
         if guild is None:
-            guild = ctx.bot.d.data.create_guild(ctx.guild_id)
-        user = ctx.bot.d.data.create_member(guild, ctx.user.id)
-    res = ctx.bot.d.data.set_member_tz(user, timezone)
+            guild = wcd.create_guild(ctx.guild_id)
+        user = wcd.create_member(guild, ctx.user.id)
+    res = wcd.set_member_tz(user, timezone)
     if res is False:
         await ctx.respond(
             f"Failed, please provide a working timezone ('{timezone}' is unknow)"
@@ -35,7 +36,7 @@ async def setIt(ctx: lightbulb.SlashContext, timezone: Optional[str] = None) -> 
 
 @setIt.autocomplete("timezone")
 async def setIt_autocomplete_timezone(opt, inter):
-    return world_clock_data.COMMON_TIMEZONES
+    return world_clock_data.match_timezone(opt.value)
 
 
 @lightbulb.add_checks(lightbulb.human_only)
@@ -66,6 +67,7 @@ async def listIt(
         title="WorldTimeZone Clock",
         description="",
     ).set_thumbnail(ctx.user.avatar_url)
+    wcd = ctx.bot.d.world_clock_data
 
     def add_field(member_id, tz):
         user_ = ctx.bot.cache.get_member(ctx.guild_id, int(member_id))
@@ -75,11 +77,11 @@ async def listIt(
         embed.add_field(f"{user_.display_name}", f"{new_now}", inline=False)
 
     if user is None:
-        for member in ctx.bot.d.data.get_members_list(ctx.guild_id):
+        for member in wcd.get_members_list(ctx.guild_id):
             if member.tz != "":
                 add_field(member.discord_id, member.tz)
     else:
-        member = ctx.bot.d.data.get_member(ctx.guild_id, user.id)
+        member = wcd.get_member(ctx.guild_id, user.id)
         if member is None or member.tz == "":
             ctx.respond("This user has no timezone set.")
             return
@@ -89,7 +91,7 @@ async def listIt(
 
 @lightbulb.add_checks(lightbulb.human_only)
 @plugin.command
-@lightbulb.option("hour", "hour in your timezone", type=int, required=True)
+@lightbulb.option("hour", "hour", type=int, required=True)
 @lightbulb.option("minute", "minute", type=int, required=False, default=0)
 @lightbulb.option(
     "day",
@@ -139,8 +141,9 @@ async def convertIt(
             f"Failed, please provide a working timezone ('{timezone}' is unknow)"
         )
         return
+    wcd = ctx.bot.d.world_clock_data
     message = ""
-    user_info = ctx.bot.d.data.get_member(ctx.guild_id, ctx.user.id)
+    user_info = wcd.get_member(ctx.guild_id, ctx.user.id)
     if user_info is None or user_info.tz == "":
         await ctx.respond("Please set your timezone first")
         return
@@ -149,7 +152,7 @@ async def convertIt(
         now = pytz.timezone(user_info.tz).localize(now)
     else:
         now = pytz.timezone(timezone).localize(now)
-    for member_info in ctx.bot.d.data.get_members_list(ctx.guild_id) or []:
+    for member_info in wcd.get_members_list(ctx.guild_id) or []:
         if member_info.tz != "":
             user_ = ctx.bot.cache.get_member(ctx.guild_id, int(member_info.discord_id))
             new_tz = pytz.timezone(member_info.tz)
@@ -163,7 +166,7 @@ async def convertIt(
 
 @convertIt.autocomplete("timezone")
 async def convertIt_autocomplete_timezone(opt, inter):
-    return world_clock_data.COMMON_TIMEZONES
+    return world_clock_data.match_timezone(opt.value)
 
 
 @lightbulb.add_checks(lightbulb.human_only)
@@ -184,13 +187,14 @@ async def convertIt_autocomplete_timezone(opt, inter):
 async def setupIt(
     ctx: lightbulb.SlashContext, channel: hikari.OptionType.CHANNEL
 ) -> None:
+    wcd = ctx.bot.d.world_clock_data
     message = await ctx.bot.rest.create_message(
         channel, "This message will be edited in no time... Please wait..."
     )
-    guild = ctx.bot.d.data.get_guild(ctx.guild_id)
+    guild = wcd.get_guild(ctx.guild_id)
     if guild is None:
-        guild = ctx.bot.d.data.create_guild(ctx.guild_id)
-    status = ctx.bot.d.data.set_guild_world_clock(guild, channel.id, message.id)
+        guild = wcd.create_guild(ctx.guild_id)
+    status = wcd.set_guild_world_clock(guild, channel.id, message.id)
     if status is False:
         await message.delete()
         ctx.respond("Sorry, an error occured.")
@@ -201,7 +205,8 @@ async def setupIt(
 
 
 def load(bot: lightbulb.BotApp):
-    bot.d.data = world_clock_data.WorldClockData()
+    bot.d.world_clock_data = world_clock_data.WorldClockData()
+    bot.load_extensions("extensions.world_clock_tasks")
     bot.add_plugin(plugin)
 
 

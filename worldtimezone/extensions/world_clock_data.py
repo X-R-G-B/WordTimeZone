@@ -32,6 +32,9 @@ COMMON_TIMEZONES = [
     "Africa/Bamako",
 ]
 
+def match_timezone(val: str):
+    return [x for x in COMMON_TIMEZONES if val.lower() in x.lower()]
+
 
 class DBBaseModel(peewee.Model):
     class Meta:
