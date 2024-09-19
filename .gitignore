@@ -162,3 +162,4 @@ cython_debug/
 #.idea/
 
 /.ruff_cache
+/.data/tz_v3.db
