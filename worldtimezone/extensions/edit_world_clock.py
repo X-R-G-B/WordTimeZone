@@ -10,8 +10,13 @@ plugin = lightbulb.Plugin("EditWorldClock")
 
 @tasks.task(m=5, auto_start=True, pass_app=True)
 async def edit_world_clock(bot: lightbulb.BotApp) -> None:
-    def create_embed(guild_id, u, tz):
-        user_ = bot.cache.get_member(guild_id, int(u))
+    await bot.wait_for(hikari.StartedEvent, timeout=None)
+
+    def create_embed(guild_id, member_id, tz):
+        print("guild_id", guild_id, "member_id", member_id)
+        user_ = bot.cache.get_member(guild_id, int(member_id))
+        if user_ is None:
+            return None
         embed = (
             hikari.Embed(
                 title=f"WorldTimeClock - {user_.display_name}",
@@ -26,19 +31,22 @@ async def edit_world_clock(bot: lightbulb.BotApp) -> None:
         embed.add_field("Time", f"{new_now}", inline=False)
         return embed
 
-    for guild_id in bot.d.data.get_guilds_list():
+    for guild in bot.d.data.get_guilds_list():
         embeds = []
-        guild_world_clock = bot.d.data.get_world_clock(guild_id)
-        channel_world_clock = guild_world_clock["channel_id"]
-        message_world_clock = guild_world_clock["message_id"]
+        channel_world_clock = guild.channel_id
+        message_world_clock = guild.message_id
 
-        for u in bot.d.data.get_members_list(guild_id):
-            member = bot.d.data.get_member(guild_id, u)
-            if "tz" in member:
-                embeds.append(create_embed(guild_id, u, member["tz"]))
-        await bot.rest.edit_message(
-            channel_world_clock, message_world_clock, None, embeds=embeds
-        )
+        for u in bot.d.data.get_members_list(guild.discord_id) or []:
+            if u.tz != "":
+                embed = create_embed(guild.discord_id, u.discord_id, u.tz)
+                if embed is not None:
+                    embeds.append(embed)
+                else:
+                    print(f"Failed user: {guild.discord_id} {u.discord_id}")
+        if len(embeds) != 0:
+            await bot.rest.edit_message(
+                channel_world_clock, message_world_clock, None, embeds=embeds
+            )
 
 
 def load(bot: lightbulb.BotApp):

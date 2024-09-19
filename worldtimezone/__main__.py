@@ -1,9 +1,15 @@
+import asyncio
 import os
 
 import hikari
 import lightbulb
 from hikari import Intents
 from lightbulb.ext import tasks
+
+if os.name != "nt":
+    import uvloop
+
+    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 INTENTS = Intents.GUILD_MEMBERS | Intents.GUILDS
 

@@ -6,4 +6,4 @@ COPY pyproject.toml uv.lock /app
 WORKDIR /app
 RUN uv sync --frozen
 COPY . /app
-CMD [ "uv", "run", "./worldtimezone/__main__.py" ]
+CMD [ "uv", "run", "python", "-O", "./worldtimezone/__main__.py" ]
