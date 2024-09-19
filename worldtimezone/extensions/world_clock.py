@@ -149,7 +149,7 @@ async def convertIt(
         now = pytz.timezone(timezone).localize(now)
     for member_info in ctx.bot.d.data.get_members_list(ctx.guild_id):
         if member_info.tz != "":
-            user_ = ctx.bot.cache.get_member(ctx.guild_id, int(u))
+            user_ = ctx.bot.cache.get_member(ctx.guild_id, int(member_info.discord_id))
             new_tz = pytz.timezone(member_info.tz)
             new_now = now.astimezone(new_tz)
             message += f"**{user_.display_name}**: {new_now} [{member_info.tz}]\n"
