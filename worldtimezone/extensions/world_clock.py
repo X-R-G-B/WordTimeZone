@@ -1,5 +1,4 @@
 import datetime
-from typing import Optional
 
 import hikari
 import lightbulb
@@ -13,12 +12,14 @@ plugin = lightbulb.Plugin("WorldClock")
 @plugin.command
 @lightbulb.add_cooldown(5, 1, lightbulb.UserBucket)
 @lightbulb.option(
-    "timezone", "Your TimeZone", type=str, required=False, autocomplete=True
+    "timezone", "Your TimeZone", type=str, required=True, autocomplete=True
 )
 @lightbulb.command("set", description="Set your TimeZone", pass_options=True)
 @lightbulb.implements(lightbulb.SlashCommand)
-async def setIt(ctx: lightbulb.SlashContext, timezone: Optional[str] = None) -> None:
-    wcd = ctx.bot.d.world_clock_data
+async def setIt(ctx: lightbulb.SlashContext, timezone: str) -> None:
+    wcd = ctx.bot.d.world_clock_data  # pyright: ignore[reportAny]
+    assert isinstance(wcd, world_clock_data.WorldClockData)
+    assert ctx.guild_id is not None
     user = wcd.get_member(ctx.guild_id, ctx.user.id)
     if user is None:
         guild = wcd.get_guild(ctx.guild_id)
@@ -27,16 +28,21 @@ async def setIt(ctx: lightbulb.SlashContext, timezone: Optional[str] = None) -> 
         user = wcd.create_member(guild, ctx.user.id)
     res = wcd.set_member_tz(user, timezone)
     if res is False:
-        await ctx.respond(
+        _ = await ctx.respond(
             f"Failed, please provide a working timezone ('{timezone}' is unknow)"
         )
         return
-    await ctx.respond("Your TimeZone as been set!")
+    _ = await ctx.respond("Your TimeZone as been set!")
 
 
 @setIt.autocomplete("timezone")
-async def setIt_autocomplete_timezone(opt, inter):
-    return world_clock_data.match_timezone(opt.value)
+async def setIt_autocomplete_timezone(
+    opt,  # pyright: ignore[reportUnknownParameterType, reportMissingParameterType]
+    inter,  # pyright: ignore[reportUnknownParameterType, reportMissingParameterType, reportUnusedParameter]
+):
+    return world_clock_data.match_timezone(
+        opt.value  # pyright: ignore[reportUnknownArgumentType, reportUnknownMemberType]
+    )
 
 
 @lightbulb.add_checks(lightbulb.human_only)
@@ -45,7 +51,7 @@ async def setIt_autocomplete_timezone(opt, inter):
 @lightbulb.command("timezone", description="List common timezones")
 @lightbulb.implements(lightbulb.SlashCommand)
 async def timezoneIt(ctx: lightbulb.SlashContext) -> None:
-    ctx.respond(
+    _ = ctx.respond(
         f"{world_clock_data.COMMON_TIMEZONES}\nFor all timezones: <https://github.com/stub42/pytz/blob/master/tz/zone.tab>"
     )
 
@@ -60,33 +66,39 @@ async def timezoneIt(ctx: lightbulb.SlashContext) -> None:
     "list", description="see what time is it for others", pass_options=True
 )
 @lightbulb.implements(lightbulb.SlashCommand)
-async def listIt(
-    ctx: lightbulb.SlashContext, user: Optional[hikari.OptionType.USER]
-) -> None:
+async def listIt(ctx: lightbulb.SlashContext, user: hikari.User | None) -> None:
     embed = hikari.Embed(
         title="WorldTimeZone Clock",
         description="",
     ).set_thumbnail(ctx.user.avatar_url)
-    wcd = ctx.bot.d.world_clock_data
+    wcd = ctx.bot.d.world_clock_data  # pyright: ignore[reportAny]
+    assert isinstance(wcd, world_clock_data.WorldClockData)
+    assert ctx.guild_id is not None
 
-    def add_field(member_id, tz):
-        user_ = ctx.bot.cache.get_member(ctx.guild_id, int(member_id))
+    async def add_field(member_id: int, tz: str):
+        assert ctx.guild_id is not None
+        user_ = ctx.bot.cache.get_member(ctx.guild_id, member_id)
+        if user_ is None:
+            user_ = await ctx.bot.rest.fetch_member(ctx.guild_id, member_id)
         now = datetime.datetime.now()
         new_tz = pytz.timezone(tz)
         new_now = now.astimezone(new_tz)
-        embed.add_field(f"{user_.display_name}", f"{new_now}", inline=False)
+        _ = embed.add_field(f"{user_.display_name}", f"{new_now}", inline=False)
 
     if user is None:
-        for member in wcd.get_members_list(ctx.guild_id):
+        for member in wcd.get_members_list(ctx.guild_id) or []:
             if member.tz != "":
-                add_field(member.discord_id, member.tz)
+                await add_field(
+                    member.discord_id,  # pyright: ignore[reportArgumentType]
+                    member.tz,  # pyright: ignore[reportArgumentType]
+                )
     else:
         member = wcd.get_member(ctx.guild_id, user.id)
         if member is None or member.tz == "":
-            ctx.respond("This user has no timezone set.")
+            _ = ctx.respond("This user has no timezone set.")
             return
-        add_field(f"{user.id}", member.tz)
-    await ctx.respond(embed)
+        await add_field(user.id, member.tz)  # pyright: ignore[reportArgumentType]
+    _ = await ctx.respond(embed)
 
 
 @lightbulb.add_checks(lightbulb.human_only)
@@ -134,39 +146,58 @@ async def convertIt(
     day: int,
     month: int,
     year: int,
-    timezone: Optional[str],
+    timezone: str | None,
 ) -> None:
     if timezone is not None and timezone not in pytz.all_timezones:
-        await ctx.respond(
+        _ = await ctx.respond(
             f"Failed, please provide a working timezone ('{timezone}' is unknow)"
         )
         return
-    wcd = ctx.bot.d.world_clock_data
+    wcd = ctx.bot.d.world_clock_data  # pyright: ignore[reportAny]
+    assert isinstance(wcd, world_clock_data.WorldClockData)
+    assert ctx.guild_id is not None
     message = ""
     user_info = wcd.get_member(ctx.guild_id, ctx.user.id)
     if user_info is None or user_info.tz == "":
-        await ctx.respond("Please set your timezone first")
+        _ = await ctx.respond("Please set your timezone first")
         return
     now = datetime.datetime(year=year, month=month, day=day, hour=hour, minute=minute)
     if timezone is None:
-        now = pytz.timezone(user_info.tz).localize(now)
+        now = pytz.timezone(
+            user_info.tz  # pyright: ignore[reportArgumentType]
+        ).localize(now)
     else:
         now = pytz.timezone(timezone).localize(now)
     for member_info in wcd.get_members_list(ctx.guild_id) or []:
         if member_info.tz != "":
-            user_ = ctx.bot.cache.get_member(ctx.guild_id, int(member_info.discord_id))
-            new_tz = pytz.timezone(member_info.tz)
+            user_ = ctx.bot.cache.get_member(
+                ctx.guild_id,
+                int(member_info.discord_id),  # pyright: ignore[reportArgumentType]
+            )
+            if user_ is None:
+                user_ = await ctx.bot.rest.fetch_member(
+                    ctx.guild_id,
+                    int(member_info.discord_id),  # pyright: ignore[reportArgumentType]
+                )
+            new_tz = pytz.timezone(
+                member_info.tz  # pyright: ignore[reportArgumentType]
+            )
             new_now = now.astimezone(new_tz)
             message += f"**{user_.display_name}**: {new_now} [{member_info.tz}]\n"
     if len(message) == 0:
-        await ctx.respond("No timezone to convert to (use `/set` SlashCommand)")
+        _ = await ctx.respond("No timezone to convert to (use `/set` SlashCommand)")
         return
-    await ctx.respond(message)
+    _ = await ctx.respond(message)
 
 
 @convertIt.autocomplete("timezone")
-async def convertIt_autocomplete_timezone(opt, inter):
-    return world_clock_data.match_timezone(opt.value)
+async def convertIt_autocomplete_timezone(
+    opt,  # pyright: ignore[reportUnknownParameterType, reportMissingParameterType]
+    inter,  # pyright: ignore[reportUnknownParameterType, reportMissingParameterType, reportUnusedParameter]
+):
+    return world_clock_data.match_timezone(
+        opt.value  # pyright: ignore[reportUnknownArgumentType, reportUnknownMemberType]
+    )
 
 
 @lightbulb.add_checks(lightbulb.human_only)
@@ -185,9 +216,11 @@ async def convertIt_autocomplete_timezone(opt, inter):
 )
 @lightbulb.implements(lightbulb.SlashCommand)
 async def setupIt(
-    ctx: lightbulb.SlashContext, channel: hikari.OptionType.CHANNEL
+    ctx: lightbulb.SlashContext, channel: hikari.GuildTextChannel
 ) -> None:
-    wcd = ctx.bot.d.world_clock_data
+    wcd = ctx.bot.d.world_clock_data  # pyright: ignore[reportAny]
+    assert isinstance(wcd, world_clock_data.WorldClockData)
+    assert ctx.guild_id is not None
     message = await ctx.bot.rest.create_message(
         channel, "This message will be edited in no time... Please wait..."
     )
@@ -197,9 +230,9 @@ async def setupIt(
     status = wcd.set_guild_world_clock(guild, channel.id, message.id)
     if status is False:
         await message.delete()
-        ctx.respond("Sorry, an error occured.")
+        _ = ctx.respond("Sorry, an error occured.")
         return
-    await ctx.respond(
+    _ = await ctx.respond(
         "All Set! A message has been sent to the channel, it will be edited soon."
     )
 

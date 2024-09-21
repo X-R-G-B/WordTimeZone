@@ -12,3 +12,12 @@ dependencies = [
     "pytz>=2024.1",
     'uvloop>=0.20.0 ; platform_system != "Windows"',
 ]
+
+[tool.basedpyright]
+venvPath = "."
+venv = ".venv"
+
+[tool.uv]
+dev-dependencies = [
+    "types-peewee>=3.17.6.20240813",
+]

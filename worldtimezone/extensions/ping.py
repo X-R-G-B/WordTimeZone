@@ -8,7 +8,7 @@ plugin = lightbulb.Plugin("Ping")
 @lightbulb.command("ping", description="The bot's ping.")
 @lightbulb.implements(lightbulb.SlashCommand)
 async def pingIt(ctx: lightbulb.SlashContext) -> None:
-    await ctx.respond(f"Pong! Latency: {ctx.bot.heartbeat_latency * 1000:.2f}ms.")
+    _ = await ctx.respond(f"Pong! Latency: {ctx.bot.heartbeat_latency * 1000:.2f}ms.")
 
 
 def load(bot: lightbulb.BotApp):

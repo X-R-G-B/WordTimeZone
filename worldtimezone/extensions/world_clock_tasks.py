@@ -5,19 +5,23 @@ import lightbulb
 import pytz
 from lightbulb.ext import tasks
 
+from worldtimezone.extensions import world_clock_data
+
 plugin = lightbulb.Plugin("EditWorldClock")
 
 
 @tasks.task(m=5, auto_start=True, pass_app=True)
 async def edit_world_clock(bot: lightbulb.BotApp) -> None:
-    await bot.wait_for(hikari.StartedEvent, timeout=None)
+    _ = await bot.wait_for(hikari.StartedEvent, timeout=None)
+    wcd = bot.d.world_clock_data  # pyright: ignore[reportAny]
+    assert isinstance(wcd, world_clock_data.WorldClockData)
 
-    async def create_embed(guild_id, member_id, tz):
+    async def create_embed(
+        guild_id: int, member_id: str | int, tz: str
+    ) -> hikari.Embed:
         user_ = bot.cache.get_member(guild_id, int(member_id))
         if user_ is None:
             user_ = await bot.rest.fetch_member(guild_id, int(member_id))
-            if user_ is None:
-                return None
         embed = (
             hikari.Embed(
                 title=f"WorldTimeClock - {user_.display_name}",
@@ -29,32 +33,38 @@ async def edit_world_clock(bot: lightbulb.BotApp) -> None:
         now = datetime.datetime.now()
         new_tz = pytz.timezone(tz)
         new_now = now.astimezone(new_tz)
-        embed.add_field("Time", f"{new_now}", inline=False)
+        _ = embed.add_field("Time", f"{new_now}", inline=False)
         return embed
 
-    for guild in bot.d.data.get_guilds_list():
-        embeds = []
-        channel_world_clock = guild.channel_id
-        message_world_clock = guild.message_id
+    for guild in wcd.get_guilds_list():
+        embeds: list[hikari.Embed] = []
+        channel_world_clock = int(f"{guild.channel_id}")
+        message_world_clock = int(f"{guild.message_id}")
 
-        for u in bot.d.data.get_members_list(guild.discord_id) or []:
+        for u in (
+            wcd.get_members_list(
+                guild.discord_id  # pyright: ignore[reportArgumentType]
+            )
+            or []
+        ):
             if u.tz != "":
-                embed = await create_embed(guild.discord_id, u.discord_id, u.tz)
-                if embed is not None:
-                    embeds.append(embed)
-                else:
-                    print(f"Failed user: {guild.discord_id} {u.discord_id}")
+                embed = await create_embed(
+                    guild.discord_id,  # pyright: ignore[reportArgumentType]
+                    u.discord_id,  # pyright: ignore[reportArgumentType]
+                    u.tz,  # pyright: ignore[reportArgumentType]
+                )
+                embeds.append(embed)
         if len(embeds) != 0:
-            await bot.rest.edit_message(
+            _ = await bot.rest.edit_message(
                 channel_world_clock, message_world_clock, None, embeds=embeds
             )
         else:
             print(f"Failed update message: {guild.discord_id}")
 
 
-def load(bot: lightbulb.BotApp):
+def load(bot: lightbulb.BotApp):  # pyright: ignore[reportUnusedParameter]
     pass
 
 
-def unload(bot: lightbulb.BotApp):
+def unload(bot: lightbulb.BotApp):  # pyright: ignore[reportUnusedParameter]
     pass

@@ -1,5 +1,6 @@
+# pyright: reportUnknownVariableType=false, reportUnknownMemberType=false, reportUnknownMemberType=false, reportUnknownArgumentType=false
 import os
-from typing import Optional
+from typing import Any
 
 import peewee
 import pytz
@@ -32,6 +33,7 @@ COMMON_TIMEZONES = [
     "Africa/Bamako",
 ]
 
+
 def match_timezone(val: str):
     return [x for x in COMMON_TIMEZONES if val.lower() in x.lower()]
 
@@ -55,14 +57,14 @@ class DBMember(DBBaseModel):
 
 class WorldClockData:
     def __init__(self):
-        db.connect()
+        _ = db.connect()
         db.create_tables([DBGuild, DBMember])
         # START Transform old format to new
         if os.path.isfile(FILE_INFO_V2):
             import json
 
             with open(FILE_INFO_V2) as f:
-                data = json.load(f)
+                data: dict[str, dict[str, Any]] = json.load(f)
             for guild_id, guild_value in data.items():
                 new_guild = DBGuild(discord_id=guild_id)
                 if (
@@ -78,9 +80,14 @@ class WorldClockData:
                     ]
                 new_guild.save()
                 if "members" in guild_value:
-                    for member_id, member_value in guild_value["members"].items():
+                    for (
+                        member_id,  # pyright: ignore [reportAny]
+                        member_value,  # pyright: ignore [reportAny]
+                    ) in guild_value[  # pyright: ignore [reportAny]
+                        "members"
+                    ].items():
                         new_member = DBMember(
-                            discord_id=member_id,
+                            discord_id=member_id,  # pyright: ignore [reportAny]
                             guild=new_guild,
                         )
                         if "tz" in member_value:
@@ -91,39 +98,42 @@ class WorldClockData:
 
     # Guild
 
-    def create_guild(self, guild_id) -> DBGuild:
+    def create_guild(self, guild_id: str | int) -> DBGuild:
+        guild_id = f"{guild_id}"
         guild = DBGuild(discord_id=guild_id)
         guild.save()
         return guild
 
-    def get_guild(self, guild_id) -> Optional[DBGuild]:
+    def get_guild(self, guild_id: str | int) -> DBGuild | None:
         guild_id = f"{guild_id}"
         try:
             return DBGuild.select().where(DBGuild.discord_id == guild_id).get()
-        except DBGuild.DoesNotExist:
+        except DBGuild.DoesNotExist:  # pyright: ignore[reportAttributeAccessIssue]
             return None
 
     def get_guilds_list(self) -> list[DBGuild]:
         guilds = DBGuild.select()
         return list(guilds)
 
-    def set_guild_world_clock(self, guild: DBGuild, channel_id, message_id) -> bool:
+    def set_guild_world_clock(
+        self, guild: DBGuild, channel_id: str | int, message_id: str | int
+    ) -> bool:
         channel_id = f"{channel_id}"
         message_id = f"{message_id}"
-        guild.channel_id = channel_id
-        guild.message_id = message_id
+        guild.channel_id = channel_id  # pyright: ignore [reportAttributeAccessIssue]
+        guild.message_id = message_id  # pyright: ignore [reportAttributeAccessIssue]
         guild.save()
         return True
 
     # Member
 
-    def create_member(self, guild: DBGuild, user_id) -> DBMember:
+    def create_member(self, guild: DBGuild, user_id: str | int) -> DBMember:
         user_id = f"{user_id}"
         member = DBMember(discord_id=user_id, guild=guild)
         member.save()
         return member
 
-    def get_member(self, guild_id, user_id) -> Optional[DBMember]:
+    def get_member(self, guild_id: str | int, user_id: str | int) -> DBMember | None:
         guild_id = f"{guild_id}"
         user_id = f"{user_id}"
         try:
@@ -135,19 +145,19 @@ class WorldClockData:
                 )
                 .get()
             )
-        except DBMember.DoesNotExist:
+        except DBMember.DoesNotExist:  # pyright: ignore[reportAttributeAccessIssue]
             return None
 
-    def get_members_list(self, guild_id) -> Optional[list[DBMember]]:
+    def get_members_list(self, guild_id: str | int) -> list[DBMember] | None:
         guild_id = f"{guild_id}"
         try:
             return DBGuild.select().where(DBGuild.discord_id == guild_id).get().members
-        except DBGuild.DoesNotExist:
+        except DBGuild.DoesNotExist:  # pyright: ignore[reportAttributeAccessIssue]
             return None
 
-    def set_member_tz(self, member: DBMember, tz: str) -> str:
+    def set_member_tz(self, member: DBMember, tz: str) -> bool:
         if tz not in pytz.all_timezones:
             return False
-        member.tz = tz
+        member.tz = tz  # pyright: ignore [reportAttributeAccessIssue]
         member.save()
         return True

@@ -386,6 +386,15 @@ wheels = [
 ]
 
 [[package]]
+name = "types-peewee"
+version = "3.17.6.20240813"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/be/5b/5f9eed99e1306d28ed460a869bf7a6011fc3bc947d0693b5943fe6f8aa51/types-peewee-3.17.6.20240813.tar.gz", hash = "sha256:54cf5705e07805b9c742b3d5c653a3fdc7818a538ab4c0c7cfa459c5b1569734", size = 14845 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/88/59/9316d93f20f0500df4b896912fba9feeaa4e605f3820fd1565feabfcee23/types_peewee-3.17.6.20240813-py3-none-any.whl", hash = "sha256:418a834fb379e4a8a74773fe205cfbd921d781d2a9ad46b5e8ba184986e599b3", size = 13819 },
+]
+
+[[package]]
 name = "tzdata"
 version = "2024.1"
 source = { registry = "https://pypi.org/simple" }
@@ -433,6 +442,11 @@ dependencies = [
     { name = "uvloop", marker = "platform_system != 'Windows'" },
 ]
 
+[package.dev-dependencies]
+dev = [
+    { name = "types-peewee" },
+]
+
 [package.metadata]
 requires-dist = [
     { name = "apscheduler", specifier = ">=3.10.4" },
@@ -442,6 +456,9 @@ requires-dist = [
     { name = "pytz", specifier = ">=2024.1" },
     { name = "uvloop", marker = "platform_system != 'Windows'", specifier = ">=0.20.0" },
 ]
+
+[package.metadata.requires-dev]
+dev = [{ name = "types-peewee", specifier = ">=3.17.6.20240813" }]
 
 [[package]]
 name = "yarl"
