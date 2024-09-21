@@ -1,8 +1,8 @@
 # pyright: reportUnknownVariableType=false, reportUnknownMemberType=false, reportUnknownMemberType=false, reportUnknownArgumentType=false
-import peewee
 import datetime
-
 from typing import override
+
+import peewee
 
 FILE_SQLITE_DB = ".data/calendar.db"
 
