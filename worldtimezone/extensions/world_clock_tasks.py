@@ -7,8 +7,6 @@ from lightbulb.ext import tasks
 
 from worldtimezone.extensions import world_clock_data
 
-plugin = lightbulb.Plugin("EditWorldClock")
-
 
 @tasks.task(m=5, auto_start=True, pass_app=True)
 async def edit_world_clock(bot: lightbulb.BotApp) -> None:
