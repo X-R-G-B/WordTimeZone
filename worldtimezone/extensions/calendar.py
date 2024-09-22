@@ -3,9 +3,7 @@ import datetime
 import lightbulb
 import pytz
 from extensions import calendar_data
-from extensions.world_clock_data import match_timezone
-
-from worldtimezone.extensions import world_clock_data
+from extensions import world_clock_data
 
 plugin = lightbulb.Plugin("Calendar")
 
@@ -173,7 +171,7 @@ async def addIt(
         reminder_number,
         reminder_interval,
     )
-    _ = ctx.respond(f"Event `{title}` created")
+    _ = await ctx.respond(f"Event `{title}` created")
 
 
 @addIt.autocomplete("timezone")
@@ -181,7 +179,7 @@ async def addIt_autocomplete_timezone(
     opt,  # pyright: ignore[reportUnknownParameterType, reportMissingParameterType]
     inter,  # pyright: ignore[reportUnknownParameterType, reportMissingParameterType, reportUnusedParameter]
 ):
-    return match_timezone(
+    return world_clock_data.match_timezone(
         opt.value  # pyright: ignore[reportUnknownArgumentType, reportUnknownMemberType]
     )
 

@@ -9,14 +9,9 @@ FILE_SQLITE_DB = ".data/calendar.db"
 db = peewee.SqliteDatabase(FILE_SQLITE_DB)
 
 
-# START Code from https://compileandrun.com/python-peewee-timezone-aware-datetime/
-class TimestampTzField(peewee.Field):
-    """
-    A timestamp field that supports a timezone by serializing the value
-    with isoformat.
-    """
+class TimestampField(peewee.DateTimeField):
 
-    field_type = "TEXT"  # This is how the field appears in Sqlite
+    field_type = "TEXT"
 
     @override
     def db_value(self, value: datetime.datetime) -> str:
@@ -30,9 +25,6 @@ class TimestampTzField(peewee.Field):
         raise ValueError("unknow value")
 
 
-# END Code from https://compileandrun.com/python-peewee-timezone-aware-datetime/
-
-
 class DBBaseModel(peewee.Model):
     class Meta:
         database = db
@@ -44,10 +36,10 @@ class DBUser(DBBaseModel):
 
 class DBEvent(DBBaseModel):
     title = peewee.TextField()
-    start = TimestampTzField()
-    end = TimestampTzField()
+    start = TimestampField()
+    end = TimestampField()
     user = peewee.ForeignKeyField(DBUser, backref="events")
-    reminder = TimestampTzField(null=True, default=None)
+    reminder = TimestampField(null=True, default=None)
     number_of_reminder = peewee.IntegerField(default=0)
     minutes_between_reminder = peewee.IntegerField(default=5)
 
@@ -100,12 +92,7 @@ class CalendarData:
 
     def get_events_need_reminder(self) -> list[DBEvent]:
         now = datetime.datetime.now().timestamp()
-        return list(
-            DBEvent.select().where(
-                DBEvent.reminder.to_timestamp()  # pyright: ignore[reportAttributeAccessIssue]
-                < now
-            )
-        )
+        return list(DBEvent.select().where(now > DBEvent.reminder.to_timestamp()))
 
     def set_event_done_reminder(self, events: list[DBEvent]):
         for event in events:

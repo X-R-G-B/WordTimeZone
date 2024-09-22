@@ -5,7 +5,7 @@ import lightbulb
 import pytz
 from lightbulb.ext import tasks
 
-from worldtimezone.extensions import world_clock_data
+from extensions import world_clock_data
 
 
 @tasks.task(m=5, auto_start=True, pass_app=True)
@@ -36,6 +36,8 @@ async def edit_world_clock(bot: lightbulb.BotApp) -> None:
 
     for guild in wcd.get_guilds_list():
         embeds: list[hikari.Embed] = []
+        if guild.channel_id == "" or guild.message_id == "":
+            continue
         channel_world_clock = int(f"{guild.channel_id}")
         message_world_clock = int(f"{guild.message_id}")
 

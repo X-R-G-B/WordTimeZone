@@ -28,6 +28,7 @@ async def on_starting(_: hikari.StartingEvent) -> None:
 
 bot.load_extensions("extensions.ping")
 bot.load_extensions("extensions.world_clock")
+bot.load_extensions("extensions.calendar")
 
 
 if __name__ == "__main__":
