@@ -3,9 +3,8 @@ import datetime
 import hikari
 import lightbulb
 import pytz
-from lightbulb.ext import tasks
-
 from extensions import world_clock_data
+from lightbulb.ext import tasks
 
 
 @tasks.task(m=5, auto_start=True, pass_app=True)

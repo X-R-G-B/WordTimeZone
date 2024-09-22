@@ -1,7 +1,7 @@
 import hikari
 import lightbulb
-from lightbulb.ext import tasks
 from extensions import calendar_data
+from lightbulb.ext import tasks
 
 
 @tasks.task(m=1, auto_start=True, pass_app=True)

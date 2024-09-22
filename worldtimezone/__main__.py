@@ -3,6 +3,7 @@ import os
 
 import hikari
 import lightbulb
+import miru
 from hikari import Intents
 from lightbulb.ext import tasks
 
@@ -19,6 +20,7 @@ bot = lightbulb.BotApp(
     banner=None,
 )
 tasks.load(bot)
+bot.d.miru = miru.Client(bot)
 
 
 @bot.listen(hikari.StartingEvent)

@@ -10,7 +10,6 @@ db = peewee.SqliteDatabase(FILE_SQLITE_DB)
 
 
 class TimestampField(peewee.DateTimeField):
-
     field_type = "TEXT"
 
     @override
