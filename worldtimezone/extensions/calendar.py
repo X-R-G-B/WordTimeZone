@@ -195,15 +195,6 @@ class AddEventModal(miru.Modal, title="Add Event"):
     e_reminder = miru.TextInput(
         label="Reminder", placeholder="2024-09-20 09:50:00", required=False
     )
-    e_reminder_number = miru.TextInput(
-        label="Number of Reminder", value="1", required=True
-    )
-    e_reminder_interval = miru.TextInput(
-        label="Minute(s) Interval between Reminders", value="5", required=True
-    )
-    e_timezone = miru.TextInput(
-        label="Timezone", placeholder="(your timezone by default)", required=False
-    )
 
     @override
     async def callback(self, ctx: miru.ModalContext) -> None:
@@ -213,43 +204,34 @@ class AddEventModal(miru.Modal, title="Add Event"):
         assert isinstance(wcd, world_clock_data.WorldClockData)
         assert ctx.guild_id is not None
         user_info = wcd.get_member(ctx.guild_id, ctx.user.id)
-        if self.e_timezone.value is None and (user_info is None or user_info.tz == ""):
+        if user_info is None or user_info.tz == "":
             _ = await ctx.respond("Please set your timezone first")
             return
         now = datetime.datetime.now()
-        if self.e_timezone.value is None:
-            assert user_info is not None
-            now = pytz.timezone(
-                user_info.tz  # pyright: ignore[reportArgumentType]
-            ).localize(now)
-        else:
-            now = pytz.timezone(self.e_timezone.value).localize(now)
+        assert user_info is not None
+        now = pytz.timezone(
+            user_info.tz  # pyright: ignore[reportArgumentType]
+        ).localize(now)
 
         assert self.e_start.value is not None  # Field Required
         start_date = dateparser.parse(self.e_start.value)
         if start_date is None:
             _ = await ctx.respond(f"Can't parse {self.e_start.value} to a date")
             return
-        if self.e_timezone.value is None:
-            assert user_info is not None
-            start_date = pytz.timezone(
-                user_info.tz  # pyright: ignore[reportArgumentType]
-            ).localize(start_date)
-        else:
-            start_date = pytz.timezone(self.e_timezone.value).localize(start_date)
+        assert user_info is not None
+        start_date = pytz.timezone(
+            user_info.tz  # pyright: ignore[reportArgumentType]
+        ).localize(start_date)
 
         assert self.e_end.value is not None  # Field Required
         end_date = dateparser.parse(self.e_end.value)
         if end_date is None:
             _ = await ctx.respond(f"Can't parse {self.e_end.value} to a date")
             return
-        if self.e_timezone.value is None:
-            assert user_info is not None
-            end_date = pytz.timezone(
-                user_info.tz  # pyright: ignore[reportArgumentType]
-            ).localize(end_date)
-        else:
-            end_date = pytz.timezone(self.e_timezone.value).localize(end_date)
+        assert user_info is not None
+        end_date = pytz.timezone(
+            user_info.tz  # pyright: ignore[reportArgumentType]
+        ).localize(end_date)
 
         if self.e_reminder.value is None:
             reminder_date = start_date - datetime.timedelta(hours=1)
@@ -258,38 +240,13 @@ class AddEventModal(miru.Modal, title="Add Event"):
             if reminder_date is None:
                 _ = await ctx.respond(f"Can't parse {self.e_reminder.value} to a date")
                 return
-            if self.e_timezone.value is None:
-                assert user_info is not None
-                reminder_date = pytz.timezone(
-                    user_info.tz  # pyright: ignore[reportArgumentType]
-                ).localize(reminder_date)
-            else:
-                reminder_date = pytz.timezone(self.e_timezone.value).localize(
-                    reminder_date
-                )
+            assert user_info is not None
+            reminder_date = pytz.timezone(
+                user_info.tz  # pyright: ignore[reportArgumentType]
+            ).localize(reminder_date)
 
-        reminder_number = 0
-        try:
-            assert self.e_reminder_number.value is not None  # Field required
-            reminder_number = int(self.e_reminder_number.value)
-        except ValueError:
-            _ = await ctx.respond(
-                f"Can't parse {self.e_reminder_number.value} to number"
-            )
-            return
-        if reminder_number == 0:
-            reminder_date = None
-
-        reminder_interval = 0
-        try:
-            assert self.e_reminder_interval.value is not None  # Field required
-            reminder_interval = int(self.e_reminder_interval.value)
-        except ValueError:
-            _ = await ctx.respond(
-                f"Can't parse {self.e_reminder_interval.value} to number"
-            )
-            return
-
+        reminder_number = 1
+        reminder_interval = 5
         cd = (  # pyright: ignore [reportUnknownMemberType, reportUnknownVariableType]
             ctx.client.app.d.calendar_data  # pyright: ignore[reportAttributeAccessIssue, reportUnknownMemberType]
         )
