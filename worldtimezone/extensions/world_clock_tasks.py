@@ -9,7 +9,6 @@ from lightbulb.ext import tasks
 
 @tasks.task(m=5, auto_start=True, pass_app=True)
 async def edit_world_clock(bot: lightbulb.BotApp) -> None:
-    _ = await bot.wait_for(hikari.StartedEvent, timeout=None)
     wcd = bot.d.world_clock_data  # pyright: ignore[reportAny]
     assert isinstance(wcd, world_clock_data.WorldClockData)
 
