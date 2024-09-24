@@ -555,7 +555,7 @@ requires-dist = [
     { name = "apscheduler", specifier = ">=3.10.4" },
     { name = "dateparser", specifier = ">=1.2.0" },
     { name = "hikari", extras = ["speedups"], specifier = ">=2.0.0" },
-    { name = "hikari-lightbulb", specifier = ">=2.3.5.post0" },
+    { name = "hikari-lightbulb", specifier = "<3.0.0" },
     { name = "hikari-miru", specifier = ">=4.1.1" },
     { name = "peewee", specifier = ">=3.17.6" },
     { name = "pytz", specifier = ">=2024.1" },
