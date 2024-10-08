@@ -8,9 +8,12 @@ from hikari import Intents
 from lightbulb.ext import tasks
 
 if os.name != "nt":
-    import uvloop
-
-    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+    try:
+        import uvloop
+    except ModuleNotFoundError:
+        pass
+    else:
+        asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 INTENTS = Intents.GUILD_MEMBERS | Intents.GUILDS
 

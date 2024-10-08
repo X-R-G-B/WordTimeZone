@@ -1,4 +1,4 @@
-FROM python:3.12-slim-bookworm AS base
+FROM python:3.13.0-slim-bookworm AS base
 RUN apt-get update -y \
     && apt-get install -y gcc \
     && rm -rf /var/lib/apt/lists/*
