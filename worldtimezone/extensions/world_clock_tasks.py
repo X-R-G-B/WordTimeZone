@@ -53,9 +53,12 @@ async def edit_world_clock(bot: lightbulb.BotApp) -> None:
                 )
                 embeds.append(embed)
         if len(embeds) != 0:
-            _ = await bot.rest.edit_message(
-                channel_world_clock, message_world_clock, None, embeds=embeds
-            )
+            try:
+                _ = await bot.rest.edit_message(
+                    channel_world_clock, message_world_clock, None, embeds=embeds
+                )
+            except hikari.errors.ForbiddenError:
+                print(f"Failed update message: {guild.discord_id}")
         else:
             print(f"Failed update message: {guild.discord_id}")
 
