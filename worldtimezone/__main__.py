@@ -11,6 +11,7 @@ if os.name != "nt":
     try:
         import uvloop
     except ModuleNotFoundError:
+        print("uvloop is missing")
         pass
     else:
         asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
