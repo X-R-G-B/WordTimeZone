@@ -35,7 +35,9 @@ COMMON_TIMEZONES = [
 
 
 def match_timezone(val: str):
-    return [x for x in COMMON_TIMEZONES if val.lower() in x.lower()]
+    if val == "":
+        return COMMON_TIMEZONES
+    return [x for x in pytz.all_timezones if val.lower() in x.lower()][:15]
 
 
 class DBBaseModel(peewee.Model):
