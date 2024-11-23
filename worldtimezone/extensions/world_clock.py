@@ -46,6 +46,45 @@ async def setIt_autocomplete_timezone(
 
 
 @lightbulb.add_checks(lightbulb.human_only)
+@lightbulb.add_checks(lightbulb.owner_only)
+@plugin.command
+@lightbulb.add_cooldown(5, 1, lightbulb.UserBucket)
+@lightbulb.option("timezone", "TimeZone", type=str, required=True, autocomplete=True)
+@lightbulb.option("member", "Member", type=hikari.Member, required=True)
+@lightbulb.command("set_owner", description="Set your TimeZone", pass_options=True)
+@lightbulb.implements(lightbulb.SlashCommand)
+async def setItOwner(
+    ctx: lightbulb.SlashContext, timezone: str, member: hikari.Member
+) -> None:
+    wcd = ctx.bot.d.world_clock_data  # pyright: ignore[reportAny]
+    assert isinstance(wcd, world_clock_data.WorldClockData)
+    assert ctx.guild_id is not None
+    user = wcd.get_member(ctx.guild_id, member.id)
+    if user is None:
+        guild = wcd.get_guild(ctx.guild_id)
+        if guild is None:
+            guild = wcd.create_guild(ctx.guild_id)
+        user = wcd.create_member(guild, member.id)
+    res = wcd.set_member_tz(user, timezone)
+    if res is False:
+        _ = await ctx.respond(
+            f"Failed, please provide a working timezone ('{timezone}' is unknow)"
+        )
+        return
+    _ = await ctx.respond(f"Your TimeZone as been set for {member.display_name}!")
+
+
+@setItOwner.autocomplete("timezone")
+async def setIt_autocomplete_timezone(
+    opt,  # pyright: ignore[reportUnknownParameterType, reportMissingParameterType]
+    inter,  # pyright: ignore[reportUnknownParameterType, reportMissingParameterType, reportUnusedParameter]
+):
+    return world_clock_data.match_timezone(
+        opt.value  # pyright: ignore[reportUnknownArgumentType, reportUnknownMemberType]
+    )
+
+
+@lightbulb.add_checks(lightbulb.human_only)
 @plugin.command
 @lightbulb.add_cooldown(5, 1, lightbulb.UserBucket)
 @lightbulb.command("timezone", description="List common timezones")
