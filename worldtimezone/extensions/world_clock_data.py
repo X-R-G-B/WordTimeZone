@@ -1,6 +1,7 @@
 # pyright: reportUnknownVariableType=false, reportUnknownMemberType=false, reportUnknownMemberType=false, reportUnknownArgumentType=false
 import os
-from typing import Any
+from typing import Any, override
+import json
 
 import peewee
 import pytz
@@ -45,10 +46,27 @@ class DBBaseModel(peewee.Model):
         database = db
 
 
+class ArrayField(peewee.TextField):
+    field_type = "TEXT"
+
+    @override
+    def db_value(self, value: list[str]):
+        if value:
+            return json.dumps(value)
+        return "[]"
+
+    @override
+    def python_value(self, value: str) -> list[str]:
+        if value:
+            return json.loads(value)  # pyright: ignore[reportAny]
+        return []
+
+
 class DBGuild(DBBaseModel):
     discord_id = peewee.CharField(unique=True)
     channel_id = peewee.CharField(default="")
     message_id = peewee.CharField(default="")
+    message_id_others = ArrayField(default=[])
 
 
 class DBMember(DBBaseModel):
@@ -126,6 +144,21 @@ class WorldClockData:
         guild.message_id = message_id  # pyright: ignore [reportAttributeAccessIssue]
         guild.save()
         return True
+
+    def add_message_id(self, guild: DBGuild, message_id: str | int) -> bool:
+        message_id = f"{message_id}"
+        guild.message_id_others.append(message_id)
+        guild.save()
+        return True
+
+    def remove_message_id(self, guild: DBGuild, messages_id: list[str | int]) -> bool:
+        new_list = []
+        messages_id_ = [f"{x}" for x in messages_id]
+        for elem in guild.message_id_others:
+            if elem not in messages_id_:
+                new_list.append(elem)
+        guild.message_id_others = new_list
+        guild.save()
 
     # Member
 

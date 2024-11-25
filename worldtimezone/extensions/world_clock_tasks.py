@@ -33,11 +33,14 @@ async def edit_world_clock(bot: lightbulb.BotApp) -> None:
         return embed
 
     for guild in wcd.get_guilds_list():
+        paginated_embeds: list[list[hikari.Embed]] = [[]]
         embeds: list[hikari.Embed] = []
         if guild.channel_id == "" or guild.message_id == "":
             continue
         channel_world_clock = int(f"{guild.channel_id}")
         message_world_clock = int(f"{guild.message_id}")
+        message_page_world_clock = guild.message_id_others
+        assert isinstance(message_page_world_clock, list)
 
         for u in (
             wcd.get_members_list(
@@ -52,15 +55,52 @@ async def edit_world_clock(bot: lightbulb.BotApp) -> None:
                     u.tz,  # pyright: ignore[reportArgumentType]
                 )
                 embeds.append(embed)
-        if len(embeds) != 0:
-            try:
-                _ = await bot.rest.edit_message(
-                    channel_world_clock, message_world_clock, None, embeds=embeds
-                )
-            except hikari.ForbiddenError:
-                print(f"Failed update message: {guild.discord_id}")
-        else:
-            print(f"Failed update message: {guild.discord_id}")
+        for embed in embeds:
+            if len(paginated_embeds[-1]) == 10:
+                paginated_embeds.append([])
+            paginated_embeds[-1].append(embed)
+        for i, page in enumerate(paginated_embeds):
+            message_id = message_world_clock
+            if i != 0:
+                if len(message_page_world_clock) <= i - 1:
+                    message_id = None
+                else:
+                    message_id_ = message_page_world_clock[i - 1]
+                    assert isinstance(message_id_, str)
+                    message_id = int(str(message_id_))
+            if len(page) != 0:
+                if message_id == None:
+                    try:
+                        message = await bot.rest.create_message(
+                            channel_world_clock, None, embeds=page
+                        )
+                        _ = wcd.add_message_id(guild, message.id)
+                    except Exception as error:
+                        print(
+                            f"Failed update message: {type(error).__name__}: {guild.discord_id} {error}"
+                        )
+                else:
+                    try:
+                        _ = await bot.rest.edit_message(
+                            channel_world_clock, message_id, None, embeds=page
+                        )
+                    except hikari.ForbiddenError as error:
+                        print(
+                            f"Failed update message: ForbiddenError: {guild.discord_id}: {error}"
+                        )
+                    except hikari.BadRequestError as error:
+                        print(
+                            f"Failed update message: BadRequestError: {guild.discord_id}: {error}"
+                        )
+                    except Exception as error:
+                        print(
+                            f"Failed update message: {type(error).__name__}: {guild.discord_id} {error}"
+                        )
+            else:
+                print(f"Failed update message: {guild.discord_id}: no embeds")
+        wcd.remove_message_id(
+            guild, message_page_world_clock[len(paginated_embeds) - 1]
+        )
 
 
 def load(bot: lightbulb.BotApp):  # pyright: ignore[reportUnusedParameter]
