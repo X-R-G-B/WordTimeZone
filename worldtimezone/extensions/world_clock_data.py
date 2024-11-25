@@ -5,11 +5,13 @@ import json
 
 import peewee
 import pytz
+from playhouse.migrate import SqliteMigrator, migrate
 
 FILE_INFO_V2 = ".data/tz_v2.json"
 FILE_SQLITE_DB = ".data/tz_v3.db"
 
 db = peewee.SqliteDatabase(FILE_SQLITE_DB)
+db_migrator = SqliteMigrator(db)
 
 
 COMMON_TIMEZONES = [
@@ -66,7 +68,6 @@ class DBGuild(DBBaseModel):
     discord_id = peewee.CharField(unique=True)
     channel_id = peewee.CharField(default="")
     message_id = peewee.CharField(default="")
-    message_id_others = ArrayField(default=[])
 
 
 class DBMember(DBBaseModel):
@@ -79,6 +80,10 @@ class WorldClockData:
     def __init__(self):
         _ = db.connect()
         db.create_tables([DBGuild, DBMember])
+        message_id_others = ArrayField(default=[])
+        migrate(
+            db_migrator.add_column(DBGuild._meta.table_name, "message_id_others", message_id_others)
+        )
         # START Transform old format to new
         if os.path.isfile(FILE_INFO_V2):
             import json
