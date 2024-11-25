@@ -99,7 +99,7 @@ async def edit_world_clock(bot: lightbulb.BotApp) -> None:
             else:
                 print(f"Failed update message: {guild.discord_id}: no embeds")
         wcd.remove_message_id(
-            guild, message_page_world_clock[len(paginated_embeds) - 1]
+            guild, message_page_world_clock[len(paginated_embeds) - 1 :]
         )
 
 
