@@ -68,6 +68,7 @@ class DBGuild(DBBaseModel):
     discord_id = peewee.CharField(unique=True)
     channel_id = peewee.CharField(default="")
     message_id = peewee.CharField(default="")
+    message_id_others = ArrayField(default=[])
 
 
 class DBMember(DBBaseModel):
@@ -81,9 +82,14 @@ class WorldClockData:
         _ = db.connect()
         db.create_tables([DBGuild, DBMember])
         message_id_others = ArrayField(default=[])
-        migrate(
-            db_migrator.add_column(DBGuild._meta.table_name, "message_id_others", message_id_others)
-        )
+        try:
+            migrate(
+                db_migrator.add_column(
+                    DBGuild._meta.table_name, "message_id_others", message_id_others
+                )
+            )
+        except peewee.OperationalError:
+            pass
         # START Transform old format to new
         if os.path.isfile(FILE_INFO_V2):
             import json
